@@ -11,18 +11,24 @@ class TreinoProvider extends ChangeNotifier {
     required String duracao,
     required String nivel,
   }) {
+    final id = DateTime.now().millisecondsSinceEpoch.toString();
     _treinos.add({
+      'id': id,
       'titulo': titulo,
       'descricao': descricao,
       'duracao': duracao,
       'nivel': nivel,
     });
-
     notifyListeners();
   }
 
   void removerTreino(int index) {
     _treinos.removeAt(index);
+    notifyListeners();
+  }
+
+  void atualizarTreino(int index, Map<String, String> novosDados) {
+    _treinos[index] = novosDados;
     notifyListeners();
   }
 
