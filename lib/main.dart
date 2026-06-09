@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'treino_provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => TreinoProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -47,8 +54,6 @@ class MobileLayout extends StatefulWidget {
 }
 
 class _MobileLayoutState extends State<MobileLayout> {
-  final List<Map<String, String>> treinos = [];
-
   final tituloController = TextEditingController();
   final descricaoController = TextEditingController();
   final duracaoController = TextEditingController();
@@ -67,14 +72,15 @@ class _MobileLayoutState extends State<MobileLayout> {
       return;
     }
 
-    setState(() {
-      treinos.add({
-        'titulo': tituloController.text,
-        'descricao': descricaoController.text,
-        'duracao': duracaoController.text,
-        'nivel': nivelController.text,
-      });
-    });
+    Provider.of<TreinoProvider>(
+      context,
+      listen: false,
+    ).adicionarTreino(
+      titulo: tituloController.text,
+      descricao: descricaoController.text,
+      duracao: duracaoController.text,
+      nivel: nivelController.text,
+    );
 
     // Encadeamento:
     // botão -> valida -> adiciona -> feedback -> limpa campos
@@ -139,13 +145,16 @@ class _MobileLayoutState extends State<MobileLayout> {
 
   // EXCLUIR TREINO (onLongPress)
   void confirmarExclusao(int index) {
+    final provider =
+        Provider.of<TreinoProvider>(context, listen: false);
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text("Excluir treino"),
           content: Text(
-            "Deseja remover o treino '${treinos[index]['titulo']}'?",
+            "Deseja remover o treino '${provider.treinos[index]['titulo']}'?",
           ),
           actions: [
             TextButton(
@@ -154,9 +163,7 @@ class _MobileLayoutState extends State<MobileLayout> {
             ),
             TextButton(
               onPressed: () {
-                setState(() {
-                  treinos.removeAt(index);
-                });
+                provider.removerTreino(index);
 
                 Navigator.pop(context);
 
@@ -193,6 +200,22 @@ class _MobileLayoutState extends State<MobileLayout> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+          ),
+
+          // WIDGET 1 REAGINDO AO ESTADO
+          Consumer<TreinoProvider>(
+            builder: (context, provider, child) {
+              return Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  "Total de treinos cadastrados: ${provider.quantidadeTreinos}",
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+            },
           ),
 
           // FORMULÁRIO
@@ -274,60 +297,64 @@ class _MobileLayoutState extends State<MobileLayout> {
             ),
           ),
 
-          // LISTA DE TREINOS
+          // WIDGET 2 REAGINDO AO MESMO ESTADO
           Expanded(
-            child: ListView.builder(
-              itemCount: treinos.length,
-              itemBuilder: (context, index) {
-                final treino = treinos[index];
+            child: Consumer<TreinoProvider>(
+              builder: (context, provider, child) {
+                return ListView.builder(
+                  itemCount: provider.treinos.length,
+                  itemBuilder: (context, index) {
+                    final treino = provider.treinos[index];
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      visualizarTreino(treino);
-                    },
-                    onLongPress: () {
-                      confirmarExclusao(index);
-                    },
-                    child: Card(
-                      elevation: 3,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              treino['titulo'] ?? '',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(treino['descricao'] ?? ''),
-                            const SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: GestureDetector(
+                        onTap: () {
+                          visualizarTreino(treino);
+                        },
+                        onLongPress: () {
+                          confirmarExclusao(index);
+                        },
+                        child: Card(
+                          elevation: 3,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "⏱ ${treino['duracao'] ?? ''}",
+                                  treino['titulo'] ?? '',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                Text(
-                                  "🔥 ${treino['nivel'] ?? ''}",
+                                const SizedBox(height: 8),
+                                Text(treino['descricao'] ?? ''),
+                                const SizedBox(height: 10),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "⏱ ${treino['duracao'] ?? ''}",
+                                    ),
+                                    Text(
+                                      "🔥 ${treino['nivel'] ?? ''}",
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 );
               },
             ),
