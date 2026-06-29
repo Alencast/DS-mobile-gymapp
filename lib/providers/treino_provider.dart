@@ -1,36 +1,56 @@
 import 'package:flutter/material.dart';
+import '../services/api_services.dart';
 
 class TreinoProvider extends ChangeNotifier {
-  final List<Map<String, String>> _treinos = [];
+  final ApiService _api = ApiService();
 
-  List<Map<String, String>> get treinos => _treinos;
+  List<dynamic> _treinos = [];
 
-  void adicionarTreino({
+  List<dynamic> get treinos => _treinos;
+
+  int get quantidadeTreinos => _treinos.length;
+
+  Future<void> carregarTreinos() async {
+    _treinos = await _api.buscarTreinos();
+    notifyListeners();
+  }
+
+  Future<void> adicionarTreino({
     required String titulo,
     required String descricao,
     required String duracao,
     required String nivel,
-  }) {
-    final id = DateTime.now().millisecondsSinceEpoch.toString();
-    _treinos.add({
-      'id': id,
-      'titulo': titulo,
-      'descricao': descricao,
-      'duracao': duracao,
-      'nivel': nivel,
-    });
+  }) async {
+    final treino = await _api.criarTreino(
+      titulo: titulo,
+      descricao: descricao,
+      duracao: duracao,
+      nivel: nivel,
+    );
+
+    _treinos.add(treino);
     notifyListeners();
   }
 
-  void removerTreino(int index) {
+  Future<void> removerTreino(int index) async {
+    final id = _treinos[index]['id'];
+
+    await _api.deletarTreino(id);
+
     _treinos.removeAt(index);
     notifyListeners();
   }
 
-  void atualizarTreino(int index, Map<String, String> novosDados) {
-    _treinos[index] = novosDados;
+  Future<void> atualizarTreino(
+    int index,
+    Map<String, dynamic> novosDados,
+  ) async {
+    final treinoAtualizado = await _api.atualizarTreino(
+      novosDados['id'],
+      novosDados,
+    );
+
+    _treinos[index] = treinoAtualizado;
     notifyListeners();
   }
-
-  int get quantidadeTreinos => _treinos.length;
 }

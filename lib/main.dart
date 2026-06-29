@@ -5,6 +5,8 @@ import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/configuracoes_screen.dart';
 import 'screens/detalhe_treino_screen.dart';
+import 'screens/auth_check_screen.dart';
+import 'guards/auth_guard.dart';
 
 void main() {
   runApp(
@@ -26,11 +28,19 @@ class MyApp extends StatelessWidget {
       title: 'Gym App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.deepPurple),
-      initialRoute: '/login',
+      initialRoute: '/',
       routes: {
+
+        '/': (context) => const AuthCheckScreen(),
+
         '/login': (context) => const LoginScreen(),
-        '/home': (context) => const HomeScreen(),
+
+       '/home': (context) => const AuthGuard(
+        child: HomeScreen(),
+),
+
         '/configuracoes': (context) => const ConfiguracoesScreen(),
+
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/detalhe') {

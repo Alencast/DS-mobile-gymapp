@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/treino_provider.dart';
 import 'tab_navigator.dart';
 import 'inicio_tab.dart';
 import 'busca_tab.dart';
@@ -13,6 +17,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final storage = const FlutterSecureStorage();
+
   int _currentIndex = 0;
 
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
@@ -20,6 +26,18 @@ class _HomeScreenState extends State<HomeScreen> {
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<TreinoProvider>(
+        context,
+        listen: false,
+      ).carregarTreinos();
+    });
+  }
 
   void _selectTab(int index) {
     if (index == _currentIndex) {
@@ -29,6 +47,14 @@ class _HomeScreenState extends State<HomeScreen> {
         _currentIndex = index;
       });
     }
+  }
+
+  Future<void> logout() async {
+    await storage.delete(key: 'access_token');
+
+    if (!mounted) return;
+
+    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
@@ -42,7 +68,10 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(color: Colors.deepPurple),
               child: Text(
                 'Menu',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
               ),
             ),
             ListTile(
@@ -62,9 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ListTile(
               title: const Text('Logout'),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/login');
-              },
+              onTap: logout,
             ),
           ],
         ),
@@ -75,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
           TabNavigator(
             navigatorKey: _navigatorKeys[0],
             tabName: 'inicio',
-            builder: (context) => const InicioTab(), // agora passa uma função que recebe BuildContext
+            builder: (context) => const InicioTab(),
           ),
           TabNavigator(
             navigatorKey: _navigatorKeys[1],
@@ -93,9 +120,18 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _currentIndex,
         onTap: _selectTab,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.fitness_center), label: 'Início'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Busca'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center),
+            label: 'Início',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Busca',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Perfil',
+          ),
         ],
       ),
     );
