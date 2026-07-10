@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 class ApiService {
   final storage = const FlutterSecureStorage();
 
-  final String baseUrl = "http://localhost:8000";
+  final String baseUrl = "http://192.168.0.10:8000";
 
   Future<String> _getToken() async {
     final token = await storage.read(key: 'access_token');
